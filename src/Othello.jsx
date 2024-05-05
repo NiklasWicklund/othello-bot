@@ -151,8 +151,6 @@ function Othello() {
                             <option value={3}>Level 3</option>
                             <option value={5}>Level 4</option>
                             <option value={7}>Level 5 (Slow)</option>
-                            <option value={10}>Level 6 (Very Slow!!!)</option>
-
                         </select>
                         <div>
                             <a href='https://www.worldothello.org/about/about-othello/othello-rules/official-rules/english' target='_blank'>Rules (External Link)</a>
