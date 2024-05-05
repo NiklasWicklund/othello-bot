@@ -6,6 +6,21 @@ function isCell(x, y) {
 }
 
 
+
+export function getStartingBoard() {
+    const newBoard = [
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, -1, 1, 0, 0, 0],
+        [0, 0, 0, 1, -1, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0]
+    
+    ]
+    return newBoard;
+}
 export function isEmpty(board, i, j) {
     return board[i][j] === 0;
 }
@@ -39,16 +54,29 @@ export function isPlaceable(board, player, i, j) {
     return false;
 }
 
-function negamax(board, player, depth, alpha = -Infinity, beta = Infinity) {
+function negamax(board, player, depth, alpha = -Infinity, beta = Infinity, numberOfTilesPlaced = null) {
+    /*
+    Negamax algorithm with alpha-beta pruning
 
-    if (depth === 0 || isTerminal(board)) {
+    Parameters:
+        board: 2D array representing the board state
+        player: 1 or -1, the player for whom to calculate the best move
+        depth: the depth of the search tree
+        alpha: the best value that the maximizing player can guarantee
+        beta: the best value that the minimizing player can guarantee
+        numberOfTilesPlaced: an array with the number of tiles placed for each player, needed if tiles are limited to 32 per player
+    
+    Returns:
+        An object with the value of the best move and the move itself
+    */
+    if (depth === 0 || isTerminal(board, numberOfTilesPlaced)) {
         return {value: evaluate(board) * player, move: null};
     }
 
-    let placeableCells = getPlaceableCells(board, player);
+    let placeableCells = getPlaceableCells(board, player, numberOfTilesPlaced);
     // If no placeable cells, pass the turn as the rules say
     if (placeableCells.length === 0) {
-        return negamax(board, -player, depth - 1, -beta, -alpha);
+        return negamax(board, -player, depth - 1, -beta, -alpha, numberOfTilesPlaced);
     }
 
     let bestValue = -Infinity;
@@ -56,9 +84,11 @@ function negamax(board, player, depth, alpha = -Infinity, beta = Infinity) {
 
     for (let [i, j] of placeableCells) {
         let newBoard = copyBoard(board);
+        let newNumberOfTilesPlaced = numberOfTilesPlaced === null ? null : {...numberOfTilesPlaced, [player]: numberOfTilesPlaced[player] + 1}
+
         newBoard[i][j] = player;
         newBoard = applyFlips(newBoard, player, i, j);
-        let result = negamax(newBoard, -player, depth - 1, -beta, -alpha);
+        let result = negamax(newBoard, -player, depth - 1, -beta, -alpha, newNumberOfTilesPlaced);
         let value = -result.value;
         if (value > bestValue) {
             bestValue = value;
@@ -74,26 +104,28 @@ function negamax(board, player, depth, alpha = -Infinity, beta = Infinity) {
 export function copyBoard(board) {
     return board.map(row => row.slice());
 }
-export function getBotMove(board, player, depth) {
+export function getBotMove(board, player, depth, numberOfTilesPlaced = null) {
     let newBoard = copyBoard(board);
-    let result = negamax(newBoard, player, depth);
+    let result = negamax(newBoard, player, depth,numberOfTilesPlaced);
     return result.move;
 }
 
-function numberOfTilesPlaced(board, player) {
-    let count = 0;
-    for (let row of board) {
-        for (let cell of row) {
-            if (cell === player) count++;
-        }
+export function getPlaceableCells(board, player, numberOfTilesPlaced = null) {
+
+    /*
+    Get all placeable cells for a player
+
+    Parameters:
+        board: 2D array representing the board state
+        player: 1 or -1, the player for whom to get the placeable cells
+        numberOfTilesPlaced: an array with the number of tiles placed for each player, needed if tiles are limited to 32 per player
+
+    Returns:
+        An array with the coordinates of the placeable cells
+    */
+    if (numberOfTilesPlaced !== null && numberOfTilesPlaced[player] >= 32){
+        return []; // Placed all tiles, can't place more
     }
-    return count;
-}
-export function getPlaceableCells(board, player) {
-
-    // Each player have 32 tiles, if they have placed all of them, they can only pass
-    if (numberOfTilesPlaced(board, player) === 32) return [];
-
     let placeableCells = [];
     for (let i = 0; i < 8; i++) {
         for (let j = 0; j < 8; j++) {
@@ -105,9 +137,9 @@ export function getPlaceableCells(board, player) {
     return placeableCells;
 }
 
-export function isTerminal(board) {
+export function isTerminal(board, numberOfTilesPlaced = null) {
 
-    return getPlaceableCells(board, 1).length === 0 && getPlaceableCells(board, -1).length === 0;
+    return getPlaceableCells(board, 1, numberOfTilesPlaced).length === 0 && getPlaceableCells(board, -1, numberOfTilesPlaced).length === 0;
 }
 export function evaluate(board) {
     let score = 0;
@@ -131,12 +163,30 @@ export function getScores(board) {
     return [blackScore, whiteScore];
 }
 export function applyFlips(board, player, i, j) {
+
+    /*
+        Apply flips to the board after a player placed a tile in a cell
+
+        Parameters:
+            board: 2D array representing the board state
+            player: 1 or -1, the player who placed the tile
+            i: the row of the cell
+            j: the column of the cell
+        
+        Returns:
+            A new board with the flips applied
+    */
     let newBoard = copyBoard(board);
     // Player placed at i, j now flip the opponent's cells
     let directions = [
         [0, 1], [0, -1], [1, 0], [-1, 0],
         [1, 1], [1, -1], [-1, 1], [-1, -1]
     ];
+    /* 
+        Goes through all directions and checks for flips:
+        - If an adjacent opponent cell is found, keep going in that direction
+        - If a player cell is eventually found in that direction flip all the opponent's cells in that direction.
+    */
     for (let d of directions) {
         let [dx, dy] = d;
         let x = i + dx, y = j + dy;
@@ -146,6 +196,7 @@ export function applyFlips(board, player, i, j) {
         while (isCell(x, y)) {
             if (board[x][y] === 0) break;
             if (board[x][y] === player) {
+                //Stops at first current player cell found
                 playerAtEnd = true;
                 break;
             }
@@ -153,6 +204,7 @@ export function applyFlips(board, player, i, j) {
             x += dx;
             y += dy;
         }
+        // Found player cell at the end, flip the opponent's cells between placed cell and player cell
         if(playerAtEnd){
             for (let [x, y] of cellsToFlip) {
                 newBoard[x][y] = player;

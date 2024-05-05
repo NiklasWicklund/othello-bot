@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 
-import { isPlaceable,isEmpty,applyFlips,evaluate,getBotMove,copyBoard,getScores,getPlaceableCells} from './utils';
+import { isPlaceable,isEmpty,applyFlips,evaluate,getBotMove,copyBoard,getScores,getPlaceableCells, isTerminal,getStartingBoard} from './utils';
 function Othello() {
 
     const [board, setBoard] = React.useState([]);
@@ -11,34 +11,61 @@ function Othello() {
     const [acceptInput, setAcceptInput] = React.useState(true);
     const [placeableCells, setPlaceableCells] = React.useState([]);
     const [difficulty, setDifficulty] = React.useState(3);
-    const resetBoard = () => {
-        const newBoard = [
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, -1, 1, 0, 0, 0],
-            [0, 0, 0, 1, -1, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0]
-        
-        ]
+
+    const [numberOfPlacedTiles, setNumberOfPlacedTiles] = React.useState({'-1': 2, '1': 2});
+
+
+    const resetGame = () => {
+
+        let newBoard = getStartingBoard();
+
+
         setBoard(newBoard);
         setScore(getScores(newBoard));
         setPlaceableCells([]);
         setPlayer(null);
         setPlayingAs(null);
         setAcceptInput(true);
+        setNumberOfPlacedTiles({'-1': 2, '1': 2});
+    }
+    const clearBoard = () => {
+        setBoard(getStartingBoard());
+        setScore([2, 2]);
     }
 
 
     
+    const checkWin = (board) => {
+        if(board === null || board.length === 0) return;
+        if (isTerminal(board,numberOfPlacedTiles)) {
+            const [blackScore, whiteScore] = getScores(board);
+            setTimeout(() => {
+                
+                if (blackScore > whiteScore) {
+                    let s = playingAs === 1 ? 'You won!' : 'You lost :(';
+                    alert(s);
+                } else if (whiteScore > blackScore) {
+                    let s = playingAs === -1 ? 'You won!' : 'You lost :(';
+                    alert(s);
+                } else {
+                    alert('It\'s a tie!');
+                }
+                resetGame();
+            },50);
+        }
+    }
     const playCell = (i, j) => {
+        
         if(!acceptInput) return; // Prevent multiple clicks
-        setPlaceableCells([]);
-        setAcceptInput(false);
+        setPlaceableCells([]); // Used for visuals, remove placeable cells as a placement is made
+        setAcceptInput(false); // check to prevent multiple clicks
         const newBoard = copyBoard(board);
         newBoard[i][j] = player;
+
+        setNumberOfPlacedTiles(prev => {
+            return {...prev, [player]: prev[player] + 1}
+        });
+
         setBoard(newBoard);
         setTimeout(() => {
             const flippedBoard = applyFlips(newBoard, player, i, j);
@@ -47,40 +74,51 @@ function Othello() {
             setTimeout(() => {
                 const newScore = getScores(flippedBoard);
                 setScore(newScore);
-                setPlaceableCells(getPlaceableCells(flippedBoard, -player));
+                checkWin(flippedBoard);
                 setPlayer(-player);
+                setPlaceableCells(getPlaceableCells(flippedBoard, -player,numberOfPlacedTiles));
                 setAcceptInput(true);
-                
             }
             , 100);
         }, 500);
     }
     const cellPressed = (i, j) => {
         if(player === playingAs && isPlaceable(board, player, i, j)) {
+            // Player's turn, can't place on bot's turn or on non-placeable cells, double check
             playCell(i, j);
         }
     }
 
     React.useEffect(() => {
-        resetBoard();
+        resetGame();
     }
     , []);
 
     React.useEffect(() => {
+        if(playingAs === null) return;
         if (player === -playingAs) { // Bot's turn
             setTimeout(() => {
 
-                const [i,j] = getBotMove(board, player,difficulty);
-                playCell(i, j);
+                const move = getBotMove(board, player,difficulty,numberOfPlacedTiles);
+                if(move !== null) {
+                    playCell(move[0], move[1]);
+                } else {
+                    setPlayer(-player);
+                }
             },100);
+        }else if(player === playingAs){
+            if(placeableCells.length === 0){
+                setPlayer(-player);
+            }
         }
     }
     , [player]);
 
+
     const startGameAs = (playerIs) => {
         setPlayingAs(playerIs);
         setPlayer(1);
-        setPlaceableCells(getPlaceableCells(board, 1));
+        setPlaceableCells(getPlaceableCells(board, 1,numberOfPlacedTiles));
     }
     const cellClassName = (i, j) => {
 
@@ -137,10 +175,10 @@ function Othello() {
                         className='score-row'
                     >
                         <th colSpan={1}>
-                            Black{playingAs === 1 ? ' (You)' : playingAs === null ? '' : ' (Bot)'}: {score[0]}
+                            ({32 - numberOfPlacedTiles[1]}) Black{playingAs === 1 ? ' (You)' : playingAs === null ? '' : ' (Bot)'}: {score[0]}
                         </th>
                         <th colSpan={1}>
-                            White{playingAs === -1 ? ' (You)' : playingAs === null ? '' : ' (Bot)'}: {score[1]}
+                            ({32 - numberOfPlacedTiles[-1]}) White{playingAs === -1 ? ' (You)' : playingAs === null ? '' : ' (Bot)'}: {score[1]}
                         </th>
                     </tr>
                     </thead>
@@ -167,7 +205,7 @@ function Othello() {
                     </tbody>
                 </table>
             </div>
-            <button onClick={resetBoard}>Reset</button>
+            <button onClick={resetGame}>Reset</button>
         </div>
     );
 }
