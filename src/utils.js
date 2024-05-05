@@ -55,6 +55,8 @@ export function isPlaceable(board, player, i, j) {
 }
 
 function negamax(board, player, depth, alpha = -Infinity, beta = Infinity, numberOfTilesPlaced = null) {
+
+    console.log("Number of tiles placed: ", numberOfTilesPlaced)
     /*
     Negamax algorithm with alpha-beta pruning
 
@@ -79,13 +81,13 @@ function negamax(board, player, depth, alpha = -Infinity, beta = Infinity, numbe
         return negamax(board, -player, depth - 1, -beta, -alpha, numberOfTilesPlaced);
     }
 
+    //let rankedPlaceableCells = rankPlaceableCells(board, player, placeableCells);
+
     let bestValue = -Infinity;
     let bestMove = null;
-
     for (let [i, j] of placeableCells) {
         let newBoard = copyBoard(board);
         let newNumberOfTilesPlaced = numberOfTilesPlaced === null ? null : {...numberOfTilesPlaced, [player]: numberOfTilesPlaced[player] + 1}
-
         newBoard[i][j] = player;
         newBoard = applyFlips(newBoard, player, i, j);
         let result = negamax(newBoard, -player, depth - 1, -beta, -alpha, newNumberOfTilesPlaced);
@@ -106,7 +108,7 @@ export function copyBoard(board) {
 }
 export function getBotMove(board, player, depth, numberOfTilesPlaced = null) {
     let newBoard = copyBoard(board);
-    let result = negamax(newBoard, player, depth,numberOfTilesPlaced);
+    let result = negamax(newBoard, player, depth, -Infinity,Infinity,numberOfTilesPlaced);
     return result.move;
 }
 
@@ -136,9 +138,28 @@ export function getPlaceableCells(board, player, numberOfTilesPlaced = null) {
     }
     return placeableCells;
 }
+export function rankPlaceableCells(board, player, placeableCells) {
+    // Rank placeable cells by the number of flips they would cause
+    let rankedCells = [];
+    for (let [i, j] of placeableCells) {
+        let newBoard = copyBoard(board);
+        newBoard[i][j] = player;
+        newBoard = applyFlips(newBoard, player, i, j);
+        let score = getScores(newBoard)[player > 0 ? 0 : 1]; //Index 0 is black score, index 1 is white score
+        rankedCells.push({cell: [i, j], score: score});
+    }
+    rankedCells.sort((a, b) => b.score - a.score);
+    // turn the array of objects into an array of [i, j] arrays
+    return rankedCells.map(cell => cell.cell);
+}
+
 
 export function isTerminal(board, numberOfTilesPlaced = null) {
 
+    let placeableWhite = getPlaceableCells(board, -1, numberOfTilesPlaced);
+    let placeableBlack = getPlaceableCells(board, 1, numberOfTilesPlaced);
+    console.log("White can place: ", placeableWhite.length !== 0);
+    console.log("Black can place: ", placeableBlack.length !== 0);
     return getPlaceableCells(board, 1, numberOfTilesPlaced).length === 0 && getPlaceableCells(board, -1, numberOfTilesPlaced).length === 0;
 }
 export function evaluate(board) {

@@ -10,6 +10,8 @@ function Othello() {
     const [playingAs, setPlayingAs] = React.useState(null);
     const [acceptInput, setAcceptInput] = React.useState(true);
     const [placeableCells, setPlaceableCells] = React.useState([]);
+
+    const [inGame, setInGame] = React.useState(false);
     const [difficulty, setDifficulty] = React.useState(3);
 
     const [numberOfPlacedTiles, setNumberOfPlacedTiles] = React.useState({'-1': 2, '1': 2});
@@ -18,7 +20,7 @@ function Othello() {
     const resetGame = () => {
 
         let newBoard = getStartingBoard();
-
+        
 
         setBoard(newBoard);
         setScore(getScores(newBoard));
@@ -37,7 +39,10 @@ function Othello() {
     
     const checkWin = (board) => {
         if(board === null || board.length === 0) return;
-        if (isTerminal(board,numberOfPlacedTiles)) {
+        let endGame = isTerminal(board,numberOfPlacedTiles)
+        console.log("End game: ", endGame);
+        if (endGame) {
+            setInGame(false);
             const [blackScore, whiteScore] = getScores(board);
             setTimeout(() => {
                 
@@ -95,19 +100,22 @@ function Othello() {
     , []);
 
     React.useEffect(() => {
-        if(playingAs === null) return;
+        if(playingAs === null || !inGame) return;
         if (player === -playingAs) { // Bot's turn
             setTimeout(() => {
-
+                console.log("Calling from frontend with numberOfPlacedTiles: ", numberOfPlacedTiles);
                 const move = getBotMove(board, player,difficulty,numberOfPlacedTiles);
                 if(move !== null) {
                     playCell(move[0], move[1]);
                 } else {
+                    checkWin(board);
                     setPlayer(-player);
+
                 }
             },100);
         }else if(player === playingAs){
             if(placeableCells.length === 0){
+                checkWin(board);
                 setPlayer(-player);
             }
         }
@@ -118,6 +126,7 @@ function Othello() {
     const startGameAs = (playerIs) => {
         setPlayingAs(playerIs);
         setPlayer(1);
+        setInGame(true);
         setPlaceableCells(getPlaceableCells(board, 1,numberOfPlacedTiles));
     }
     const cellClassName = (i, j) => {
