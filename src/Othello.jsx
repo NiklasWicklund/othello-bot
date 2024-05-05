@@ -98,6 +98,7 @@ function Othello() {
             {playingAs === null &&
                 <div className='overlay'>
                     <div className='overlay-content'>
+                        <h3>Lets play Othello!</h3>
                         <div className='select-color'>
                             <button onClick={() => startGameAs(1)}>Play as Black</button>
                             <button onClick={() => startGameAs(-1)}>Play as White</button>
@@ -115,6 +116,9 @@ function Othello() {
                             <option value={10}>Level 6 (Very Slow!!!)</option>
 
                         </select>
+                        <div>
+                            <a href='https://www.worldothello.org/about/about-othello/othello-rules/official-rules/english' target='_blank'>Rules (External Link)</a>
+                        </div>
                     </div>
 
                 </div>
