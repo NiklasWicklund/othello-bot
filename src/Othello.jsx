@@ -10,6 +10,7 @@ function Othello() {
     const [playingAs, setPlayingAs] = React.useState(null);
     const [acceptInput, setAcceptInput] = React.useState(true);
     const [placeableCells, setPlaceableCells] = React.useState([]);
+    const [finalResultString, setFinalResultString] = React.useState(null);
 
     const [inGame, setInGame] = React.useState(false);
     const [difficulty, setDifficulty] = React.useState(3);
@@ -29,6 +30,7 @@ function Othello() {
         setPlayingAs(null);
         setAcceptInput(true);
         setNumberOfPlacedTiles({'-1': 2, '1': 2});
+        setFinalResultString(null);
     }
     const clearBoard = () => {
         setBoard(getStartingBoard());
@@ -48,20 +50,19 @@ function Othello() {
                 
                 if (blackScore > whiteScore) {
                     let s = playingAs === 1 ? 'You won!' : 'You lost :(';
-                    alert(s);
+                    setFinalResultString(s);
                 } else if (whiteScore > blackScore) {
                     let s = playingAs === -1 ? 'You won!' : 'You lost :(';
-                    alert(s);
+                    setFinalResultString(s);
                 } else {
-                    alert('It\'s a tie!');
+                    setFinalResultString('It\'s a tie!');
                 }
-                resetGame();
             },50);
         }
     }
     const playCell = (i, j) => {
         
-        if(!acceptInput) return; // Prevent multiple clicks
+        if(!acceptInput || !inGame) return; // Prevent multiple clicks
         setPlaceableCells([]); // Used for visuals, remove placeable cells as a placement is made
         setAcceptInput(false); // check to prevent multiple clicks
         const newBoard = copyBoard(board);
@@ -140,6 +141,16 @@ function Othello() {
         }
         return 'unplaceable';
     }
+    
+    const getGameStatusText = () => {
+        if (finalResultString !== null && !inGame) {
+            return finalResultString;
+        }
+        if (playingAs === null) {
+            return 'Choose a color to start';
+        }
+        return playingAs === player ? 'Your turn' : 'Bots turn';
+    }
     return (
         <div>
             {playingAs === null &&
@@ -168,14 +179,20 @@ function Othello() {
 
                 </div>
             }
+            
             <div className='board-container'>
                 <table
                     className='score-table'
+
                 >
                     <thead>
                     <tr>
                         <th colSpan={2}>
-                            {playingAs === null ? 'Game has not started' : playingAs === player ? 'Your turn' : 'Bots turn'}
+                            <h2>
+                            {
+                                getGameStatusText()
+                            }
+                            </h2>
                         </th>
                     </tr>
                     <tr
@@ -191,7 +208,7 @@ function Othello() {
                     </thead>
                 </table>
                 <table 
-                    className={'game-table ' + (acceptInput ? '' : 'disable-table')}
+                    className={'game-table ' + (!acceptInput ? 'disable-input ' : '' + (!inGame ? 'grey-out' : ''))}
                 >
                     <tbody>
                         {board.map((row, i) => (

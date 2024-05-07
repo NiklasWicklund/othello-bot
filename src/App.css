@@ -32,6 +32,10 @@ table {
   pointer-events: none;
 }
 
+.grey-out {
+  opacity: 0.5;
+}
+
 td {
   cursor:pointer;
   position: relative;
@@ -69,7 +73,7 @@ td {
 }
 .tile.white {
   background-color: #fff;
-  box-shadow: #000 0 1px 1px;
+  box-shadow: #000 0 2px 1px;
 }
 
 .overlay {
