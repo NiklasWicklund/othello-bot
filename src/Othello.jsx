@@ -12,12 +12,20 @@ function Othello() {
     const [placeableCells, setPlaceableCells] = React.useState([]);
     const [finalResultString, setFinalResultString] = React.useState(null);
 
+    const [bestScoreAchieved, setBestScoreAchieved] = React.useState(null);
+
     const [inGame, setInGame] = React.useState(false);
     const [difficulty, setDifficulty] = React.useState(3);
 
     const [numberOfPlacedTiles, setNumberOfPlacedTiles] = React.useState({'-1': 2, '1': 2});
 
 
+    const updateBestScore = (score) => {
+        if (bestScoreAchieved === null || score > bestScoreAchieved.score) {
+            console.log("Updating best score to: ", score);
+            setBestScoreAchieved({playingAs: playingAs === 1 ? 'Black' : 'White', score: score});
+        }
+    }
     const resetGame = () => {
 
         let newBoard = getStartingBoard();
@@ -41,19 +49,19 @@ function Othello() {
     
     const checkWin = (board) => {
         if(board === null || board.length === 0) return;
-        let endGame = isTerminal(board,numberOfPlacedTiles)
-        console.log("End game: ", endGame);
-        if (endGame) {
+        if (isTerminal(board,numberOfPlacedTiles)) {
             setInGame(false);
             const [blackScore, whiteScore] = getScores(board);
+            let playerScore = playingAs === 1 ? blackScore : whiteScore;
+            let botScore = playingAs === -1 ? blackScore : whiteScore;
             setTimeout(() => {
                 
-                if (blackScore > whiteScore) {
-                    let s = playingAs === 1 ? 'You won!' : 'You lost :(';
-                    setFinalResultString(s);
-                } else if (whiteScore > blackScore) {
-                    let s = playingAs === -1 ? 'You won!' : 'You lost :(';
-                    setFinalResultString(s);
+
+                if (playerScore > botScore) {
+                    setFinalResultString('You won!');
+                    updateBestScore(playerScore);
+                } else if (botScore > playerScore) {
+                    setFinalResultString('Bot won!');
                 } else {
                     setFinalResultString('It\'s a tie!');
                 }
@@ -186,25 +194,30 @@ function Othello() {
 
                 >
                     <thead>
-                    <tr>
-                        <th colSpan={2}>
-                            <h2>
-                            {
-                                getGameStatusText()
-                            }
-                            </h2>
-                        </th>
-                    </tr>
-                    <tr
-                        className='score-row'
-                    >
-                        <th colSpan={1}>
-                            ({32 - numberOfPlacedTiles[1]}) Black{playingAs === 1 ? ' (You)' : playingAs === null ? '' : ' (Bot)'}: {score[0]}
-                        </th>
-                        <th colSpan={1}>
-                            ({32 - numberOfPlacedTiles[-1]}) White{playingAs === -1 ? ' (You)' : playingAs === null ? '' : ' (Bot)'}: {score[1]}
-                        </th>
-                    </tr>
+                        <tr>
+                            <th colSpan={2}>
+                                <p>Best win: {bestScoreAchieved !== null ? (bestScoreAchieved.score + ' as ' + bestScoreAchieved.playingAs): 'N/A'}</p>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th colSpan={2}>
+                                <h2>
+                                {
+                                    getGameStatusText()
+                                }
+                                </h2>
+                            </th>
+                        </tr>
+                        <tr
+                            className='score-row'
+                        >
+                            <th colSpan={1}>
+                                ({32 - numberOfPlacedTiles[1]}) Black{playingAs === 1 ? ' (You)' : playingAs === null ? '' : ' (Bot)'}: {score[0]}
+                            </th>
+                            <th colSpan={1}>
+                                ({32 - numberOfPlacedTiles[-1]}) White{playingAs === -1 ? ' (You)' : playingAs === null ? '' : ' (Bot)'}: {score[1]}
+                            </th>
+                        </tr>
                     </thead>
                 </table>
                 <table 
