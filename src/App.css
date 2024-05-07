@@ -33,6 +33,10 @@ table {
   font-size: 1rem;
 }
 
+.last-move-row {
+  font-size: 0.6rem;
+}
+
 
 .disable-table {
   pointer-events: none;
@@ -47,6 +51,26 @@ td {
   position: relative;
   background-color: rgb(1, 93, 1);
   padding: 0;
+}
+
+.row-number, .column-number {
+  /*Place it as a small number in top left*/
+  position: absolute;
+  padding: 0 3px;
+  font-size: 0.7rem;
+  color: white;
+}
+
+.row-number {
+  text-align: left;
+  bottom: 0;
+  left: 0;
+  
+}
+.column-number {
+  text-align: right;
+  right: 0;
+  top: 0;
 }
 
 .placeable {
@@ -125,5 +149,8 @@ hr {
   }
   .score-row {
     font-size: 0.8rem;
+  }
+  .row-number, .column-number {
+    font-size: 0.4rem;
   }
 }

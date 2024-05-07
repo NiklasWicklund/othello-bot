@@ -1,23 +1,24 @@
 import React from 'react';
 import './App.css';
 
-import { isPlaceable,isEmpty,applyFlips,evaluate,getBotMove,copyBoard,getScores,getPlaceableCells, isTerminal,getStartingBoard} from './utils';
+import { isPlaceable,isEmpty,applyFlips,getBotMove,copyBoard,getScores,getPlaceableCells, isTerminal,getStartingBoard} from './utils';
 function Othello() {
 
+    /*Game logic*/
     const [board, setBoard] = React.useState([]);
     const [player, setPlayer] = React.useState(null);
     const [score, setScore] = React.useState([0, 0]);
     const [playingAs, setPlayingAs] = React.useState(null);
     const [acceptInput, setAcceptInput] = React.useState(true);
     const [placeableCells, setPlaceableCells] = React.useState([]);
-    const [finalResultString, setFinalResultString] = React.useState(null);
-
-    const [bestScoreAchieved, setBestScoreAchieved] = React.useState(null);
-
-    const [inGame, setInGame] = React.useState(false);
     const [difficulty, setDifficulty] = React.useState(3);
 
-    const [numberOfPlacedTiles, setNumberOfPlacedTiles] = React.useState({'-1': 2, '1': 2});
+    /* Mostly frontend logic */
+    const [finalResultString, setFinalResultString] = React.useState(null);
+    const [bestScoreAchieved, setBestScoreAchieved] = React.useState(null);
+    const [inGame, setInGame] = React.useState(false);
+    const [numberOfPlacedTiles, setNumberOfPlacedTiles] = React.useState({'-1': 2, '1': 2}); // 1 is black, -1 is white
+    const [lastMove, setLastMove] = React.useState({'1': 'N/A', '-1': 'N/A'}); // Used for visuals
 
 
     const updateBestScore = (score) => {
@@ -27,10 +28,10 @@ function Othello() {
         }
     }
     const resetGame = () => {
-
         let newBoard = getStartingBoard();
         
 
+        // TODO: Restructure to remove many of these states
         setBoard(newBoard);
         setScore(getScores(newBoard));
         setPlaceableCells([]);
@@ -39,15 +40,16 @@ function Othello() {
         setAcceptInput(true);
         setNumberOfPlacedTiles({'-1': 2, '1': 2});
         setFinalResultString(null);
+        setLastMove({'1': 'N/A', '-1': 'N/A'});
     }
-    const clearBoard = () => {
-        setBoard(getStartingBoard());
-        setScore([2, 2]);
-    }
-
-
     
     const checkWin = (board) => {
+        /*
+        Check if the game is over, if it is, set the final result string
+
+        Parameters:
+            board (Array): The current game board, sent as a parameter to avoid using unupdated state or when using board which is not the current game board
+        */
         if(board === null || board.length === 0) return;
         if (isTerminal(board,numberOfPlacedTiles)) {
             setInGame(false);
@@ -55,8 +57,7 @@ function Othello() {
             let playerScore = playingAs === 1 ? blackScore : whiteScore;
             let botScore = playingAs === -1 ? blackScore : whiteScore;
             setTimeout(() => {
-                
-
+                //Use timeout to make sure everything is rendered and updated before showing the result
                 if (playerScore > botScore) {
                     setFinalResultString('You won!');
                     updateBestScore(playerScore);
@@ -69,12 +70,21 @@ function Othello() {
         }
     }
     const playCell = (i, j) => {
-        
+        /*
+            Play a cell, place a tile in the cell and apply flips
+
+            Makes use of multiple timeouts to slow down the game and make it more visually appealing and comprehensible
+        */
         if(!acceptInput || !inGame) return; // Prevent multiple clicks
-        setPlaceableCells([]); // Used for visuals, remove placeable cells as a placement is made
+        setPlaceableCells([]); // Used for visuals (and some logic), remove placeable cells as a placement is made
         setAcceptInput(false); // check to prevent multiple clicks
         const newBoard = copyBoard(board);
         newBoard[i][j] = player;
+
+        setLastMove(prev => {
+            return {...prev, [player]: num2char(j+1) + (i+1)}
+        }
+        );
 
         setNumberOfPlacedTiles(prev => {
             return {...prev, [player]: prev[player] + 1}
@@ -121,7 +131,12 @@ function Othello() {
             // Needs to check outside negamax as the first move by bot needs to be placeable
             // but it can skip turns if no moves are available deeper in the search tree
             if (placeableCells.length === 0) {
+
                 switchTurnToPlayer(-player);
+                setLastMove(prev => {
+                    return {...prev, [-player]: 'Skip'}
+                }
+                );
                 return;
             }
             setTimeout(() => {
@@ -130,6 +145,10 @@ function Othello() {
                     playCell(move[0], move[1]);
                 } else {
                     switchTurnToPlayer(-player);
+                    setLastMove(prev => {
+                        return {...prev, [-player]: 'Skip'}
+                    }
+                    );
                 }
             },100);
         }else if(player === playingAs){
@@ -167,6 +186,10 @@ function Othello() {
             return 'Choose a color to start';
         }
         return playingAs === player ? 'Your turn' : 'Bots turn';
+    }
+
+    const num2char = (num) => {
+        return String.fromCharCode(num + 64);
     }
     return (
         <div>
@@ -231,6 +254,16 @@ function Othello() {
                                 ({32 - numberOfPlacedTiles[-1]}) White{playingAs === -1 ? ' (You)' : playingAs === null ? '' : ' (Bot)'}: {score[1]}
                             </th>
                         </tr>
+                        <tr
+                            className='last-move-row'
+                        >
+                            <th colSpan={1}>
+                                Last move: {lastMove[1]}
+                            </th>
+                            <th colSpan={1}>
+                                Last move: {lastMove[-1]}
+                            </th>
+                        </tr>
                     </thead>
                 </table>
                 <table 
@@ -247,6 +280,16 @@ function Othello() {
                                     >
                                         {cell !== 0 && 
                                         <div className={'tile ' + (cell === 1 ? 'black' : 'white')}></div>
+                                        }
+                                        {i === 0 && 
+                                            <div className='column-number'>
+                                                {num2char(j+1)}
+                                            </div>
+                                        }
+                                        {j === 0 &&
+                                            <div className='row-number'>
+                                                {i+1}
+                                            </div>
                                         }
                                     </td>
                                 ))}
