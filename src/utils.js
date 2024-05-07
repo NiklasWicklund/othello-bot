@@ -19,13 +19,6 @@ export function getStartingBoard() {
         [0, 0, 0, 0, 0, 0, 0, 0]
     
     ]
-
-    for (let i = 0; i < 8; i++) {
-        for (let j = 0; j < 7; j++) {
-            newBoard[i][j] = 1;
-            
-        }
-    }
     return newBoard;
 }
 export function isEmpty(board, i, j) {
