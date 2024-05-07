@@ -37,7 +37,20 @@ table {
   font-size: 0.6rem;
 }
 
+.difficulty-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
 
+.difficulty-container select {
+  width: fit-content;
+}
+.difficulty-container p {
+  padding: 10px;
+  font-size: smaller;
+  font-weight:lighter;
+}
 .disable-table {
   pointer-events: none;
 }
@@ -136,19 +149,21 @@ td {
   border-radius: 0.5rem;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 1rem;
   color: white;
+  width: 35%;
 }
 
 hr {
   width: 100%;
-  margin: 0;
+  margin-bottom: 10px;
 }
 
 @media screen and (max-width: 768px) {
   .game-table {
-    width: 80vw;
-    height: 80vw;
+    width: min(70vw,70vh);
+    height: min(70vw,70vh);
   }
   table {
     width: 80vw;
@@ -158,5 +173,8 @@ hr {
   }
   .row-number, .column-number {
     font-size: 0.4rem;
+  }
+  .overlay-content{
+    width: 90%;
   }
 }

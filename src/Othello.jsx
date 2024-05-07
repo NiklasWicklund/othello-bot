@@ -201,22 +201,28 @@ function Othello() {
                             <button onClick={() => startGameAs(1)}>Play as Black</button>
                             <button onClick={() => startGameAs(-1)}>Play as White</button>
                         </div>
-                        <label htmlFor="dropdown">Choose difficulty:</label>
-                        <select
-                            value={difficulty}
-                            onChange={(e) => setDifficulty(parseInt(e.target.value))}
-                        >
-                            <option value={1}>Level 1 (Fast)</option>
-                            <option value={2}>Level 2</option>
-                            <option value={3}>Level 3</option>
-                            <option value={5}>Level 4</option>
-                            <option value={7}>Level 5 (Slow)</option>
-                        </select>
+                        <div className='difficulty-container'>
+                            <label htmlFor="dropdown">Choose difficulty:</label>
+                            <select
+                                value={difficulty}
+                                onChange={(e) => setDifficulty(parseInt(e.target.value))}
+                            >
+                                <option value={1}>Level 1 (Fast)</option>
+                                <option value={2}>Level 2</option>
+                                <option value={3}>Level 3</option>
+                                <option value={5}>Level 4</option>
+                                <option value={7}>Level 5 (Slow)</option>
+                            </select>
+                            <p>
+                            Difficulty levels are determined by the depth of the underlying negamax traversal. As the depth increases, the computation time also increases, resulting in slower gameplay.                            </p>
+                        </div>
+                        
                         <div>
                             <a href='https://www.worldothello.org/about/about-othello/othello-rules/official-rules/english' target='_blank'>Rules (External Link)</a>
                         </div>
-                        <hr/>
+                        
                         <div className='credits'>
+                            <hr/>
                             <p>Created by <a href='https://niklaswicklund.github.io/NiklasWicklund/' target='_blank'>Niklas Wicklund</a></p>
                         </div>
                     </div>
