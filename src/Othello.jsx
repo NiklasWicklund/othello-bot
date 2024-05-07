@@ -108,24 +108,33 @@ function Othello() {
     }
     , []);
 
+    const switchTurnToPlayer = (player) => {
+        checkWin(board);
+        setPlayer(player);
+        setPlaceableCells(getPlaceableCells(board, player,numberOfPlacedTiles));
+    }
+
     React.useEffect(() => {
         if(playingAs === null || !inGame) return;
         if (player === -playingAs) { // Bot's turn
+
+            // Needs to check outside negamax as the first move by bot needs to be placeable
+            // but it can skip turns if no moves are available deeper in the search tree
+            if (placeableCells.length === 0) {
+                switchTurnToPlayer(-player);
+                return;
+            }
             setTimeout(() => {
-                console.log("Calling from frontend with numberOfPlacedTiles: ", numberOfPlacedTiles);
                 const move = getBotMove(board, player,difficulty,numberOfPlacedTiles);
                 if(move !== null) {
                     playCell(move[0], move[1]);
                 } else {
-                    checkWin(board);
-                    setPlayer(-player);
-
+                    switchTurnToPlayer(-player);
                 }
             },100);
         }else if(player === playingAs){
             if(placeableCells.length === 0){
-                checkWin(board);
-                setPlayer(-player);
+                switchTurnToPlayer(-player);
             }
         }
     }
@@ -182,6 +191,10 @@ function Othello() {
                         </select>
                         <div>
                             <a href='https://www.worldothello.org/about/about-othello/othello-rules/official-rules/english' target='_blank'>Rules (External Link)</a>
+                        </div>
+                        <hr/>
+                        <div className='credits'>
+                            <p>Created by <a href='https://niklaswicklund.github.io/NiklasWicklund/' target='_blank'>Niklas Wicklund</a></p>
                         </div>
                     </div>
 

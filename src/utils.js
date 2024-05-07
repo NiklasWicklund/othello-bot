@@ -55,8 +55,6 @@ export function isPlaceable(board, player, i, j) {
 }
 
 function negamax(board, player, depth, alpha = -Infinity, beta = Infinity, numberOfTilesPlaced = null) {
-
-    console.log("Number of tiles placed: ", numberOfTilesPlaced)
     /*
     Negamax algorithm with alpha-beta pruning
 
@@ -158,8 +156,6 @@ export function isTerminal(board, numberOfTilesPlaced = null) {
 
     let placeableWhite = getPlaceableCells(board, -1, numberOfTilesPlaced);
     let placeableBlack = getPlaceableCells(board, 1, numberOfTilesPlaced);
-    console.log("White can place: ", placeableWhite.length !== 0);
-    console.log("Black can place: ", placeableBlack.length !== 0);
     return getPlaceableCells(board, 1, numberOfTilesPlaced).length === 0 && getPlaceableCells(board, -1, numberOfTilesPlaced).length === 0;
 }
 export function evaluate(board) {
